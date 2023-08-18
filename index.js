@@ -64,7 +64,8 @@ app.post('/user', (req, res) => {
                 console.error('Failed to add user data', err);
                 res.status(500).json(commonResponse(null, 'Failed to add user data', false, err));
             } else {
-                res.json(commonResponse(null, 'User added successfully!', true));
+                const userId = result.insertId;
+                res.json(commonResponse({ userId }, 'User added successfully!', true));
             }
         }
     );
@@ -134,7 +135,6 @@ app.get('/user/:id', async (req, res) => {
 });
 
 
-
 app.put('/user/:id', (req, res) => {
     const { id } = req.params;
     const { name, address } = req.body;
@@ -146,11 +146,16 @@ app.put('/user/:id', (req, res) => {
                 console.error('Failed to update user data', err);
                 res.status(500).json(commonResponse(null, 'Failed to update user data', false, err));
             } else {
-                res.json(commonResponse(null, 'User updated successfully!', true));
+                if (result.affectedRows === 0) {
+                    res.status(404).json(commonResponse(null, 'User not found', false));
+                } else {
+                    res.json(commonResponse({ userId: id }, 'User updated successfully!', true));
+                }
             }
         }
     );
 });
+
 
 app.delete('/user/:id', (req, res) => {
     const { id } = req.params;
@@ -162,11 +167,16 @@ app.delete('/user/:id', (req, res) => {
                 console.error('Failed to delete user data', err);
                 res.status(500).json(commonResponse(null, 'Failed to delete user data', false, err));
             } else {
-                res.json(commonResponse(null, 'User deleted successfully!', true));
+                if (result.affectedRows === 0) {
+                    res.status(404).json(commonResponse(null, 'User not found', false));
+                } else {
+                    res.json(commonResponse({ userId: id }, 'User deleted successfully!', true));
+                }
             }
         }
     );
 });
+
 
 app.post('/transaction', (req, res) => {
     const { type, amount, user_id } = req.body;
