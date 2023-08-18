@@ -55,10 +55,10 @@ const commonResponse = (data, message, success = true, error = null) => {
 };
 
 app.post('/user', (req, res) => {
-    const { id, name, address } = req.body;
+    const { name, address } = req.body;
     db.query(
-        'INSERT INTO User (id, name, address) VALUES (?, ?, ?)',
-        [id, name, address],
+        'INSERT INTO User (name, address) VALUES (?, ?)',
+        [name, address],
         (err, result) => {
             if (err) {
                 console.error('Failed to add user data', err);
@@ -69,6 +69,7 @@ app.post('/user', (req, res) => {
         }
     );
 });
+
 
 app.get('/user', (req, res) => {
     db.query(
@@ -102,7 +103,7 @@ app.get('/user/:id', async (req, res) => {
                 'SELECT User.*, ' +
                 '   SUM(CASE WHEN Transaction.type = "income" THEN Transaction.amount ELSE 0 END) AS income, ' +
                 '   SUM(CASE WHEN Transaction.type = "expense" THEN Transaction.amount ELSE 0 END) AS expense, ' +
-                '   SUM(CASE WHEN Transaction.type = "income" THEN Transaction.amount ELSE -Transaction.amount END) AS balance ' +
+                '   COALESCE (SUM(CASE WHEN Transaction.type = "income" THEN Transaction.amount ELSE -Transaction.amount END), 0) AS balance ' +
                 'FROM User ' +
                 'LEFT JOIN Transaction ON User.id = Transaction.user_id ' +
                 'WHERE User.id = ? ' +
@@ -168,7 +169,7 @@ app.delete('/user/:id', (req, res) => {
 });
 
 app.post('/transaction', (req, res) => {
-    const { id, type, amount, user_id } = req.body;
+    const { type, amount, user_id } = req.body;
 
     if (type !== "income" && type !== "expense") {
         return res.status(400).json(commonResponse(null, 'Invalid transaction type', false, 'Invalid transaction type'));
@@ -188,8 +189,8 @@ app.post('/transaction', (req, res) => {
             }
 
             db.query(
-                'INSERT INTO Transaction (id, user_id, type, amount) VALUES (?, ?, ?, ?)',
-                [id, user_id, type, amount],
+                'INSERT INTO Transaction (user_id, type, amount) VALUES (?, ?, ?)',
+                [user_id, type, amount],
                 async (err, result) => {
                     if (err) {
                         console.error('Failed to add transaction data', err);
@@ -208,6 +209,7 @@ app.post('/transaction', (req, res) => {
         }
     );
 });
+
 
 
 
